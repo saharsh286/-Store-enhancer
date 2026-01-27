@@ -1,0 +1,16 @@
+{% assign settings = shop.metafields.cookie_consent.settings.value %}
+
+<script>
+  window.__COOKIE_CONSENT_SETTINGS__ = {{ settings | json }};
+  console.log("🍪 Cookie settings from metafield:", window.__COOKIE_CONSENT_SETTINGS__);
+</script>
+
+<script src="{{ 'cookie-consent.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Cookie Consent Banner",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}
