@@ -19,8 +19,8 @@ export default function App() {
     <AppProvider embedded apiKey={apiKey}>
       <s-app-nav>
         <s-link href="/app">Home</s-link>
-        <s-link href="/app/cookie-consent">Cookie Consent</s-link>{" "}
-        <s-link href="/app/back-to-top">back-to-top</s-link>
+        {/* <s-link href="/app/cookie-consent">Cookie Consent</s-link>{" "}
+        <s-link href="/app/back-to-top">back-to-top</s-link> */}
       </s-app-nav>
       <Outlet />
     </AppProvider>

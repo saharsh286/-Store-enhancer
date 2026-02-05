@@ -1,4 +1,8 @@
 {% assign settings = shop.metafields.back_to_top.settings.value %}
+<script>
+  console.log("🍪 back to top from metafield:",assign settings = shop.metafields.back_to_top.settings.value | json );
+</script>
+
 {% if settings and settings.enabled %}
   <button
     id="back-to-top-btn"
@@ -43,7 +47,7 @@
 {% schema %}
 {
   "name": "Back To Top Button",
-  "target": "body",
+  "target": "section",
   "settings": []
 }
 {% endschema %}

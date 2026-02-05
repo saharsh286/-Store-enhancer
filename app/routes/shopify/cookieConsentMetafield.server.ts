@@ -1,64 +1,61 @@
+type CookieSettings = {
+  enabled: boolean;
+  message: string;
+  acceptText: string;
+  rejectText: string;
+  position: string;
+  color: string;
+};
+
 export async function saveCookieConsentMetafield({
-    admin,
-    settings,
-  }: {
-    admin: any;
-    settings: {
-      enabled: boolean;
-      message: string;
-      acceptText: string;
-      rejectText: string;
-      position: string;
-      color: string;
-    };
-  }) {
-    console.log("✅ saveCookieConsentMetafield CALLED");
-  
-    // 1️⃣ Get shop ID
-    const shopRes = await admin.graphql(`
-      query {
-        shop {
+  admin,
+  settings,
+}: {
+  admin: any;
+  settings: CookieSettings;
+}) {
+  /* 1️⃣ GET SHOP ID */
+  const shopResponse = await admin.graphql(`
+    query {
+      shop {
+        id
+      }
+    }
+  `);
+
+  const shopData = await shopResponse.json();
+  const shopId = shopData?.data?.shop?.id;
+
+  if (!shopId) {
+    throw new Error("Shop ID not found");
+  }
+
+  /* 2️⃣ SAVE METAFIELD */
+  await admin.graphql(
+    `
+    mutation SetCookieConsent($metafields: [MetafieldsSetInput!]!) {
+      metafieldsSet(metafields: $metafields) {
+        metafields {
           id
         }
-      }
-    `);
-  
-    const shopJson: any = await shopRes.json();
-    const shopId = shopJson.data.shop.id;
-  
-    console.log("🏪 SHOP ID:", shopId);
-  
-    // 2️⃣ Save metafield
-    const result = await admin.graphql(
-      `
-      mutation SetMetafield($metafields: [MetafieldsSetInput!]!) {
-        metafieldsSet(metafields: $metafields) {
-          userErrors {
-            field
-            message
-          }
+        userErrors {
+          message
         }
       }
-      `,
-      {
-        variables: {
-          metafields: [
-            {
-              ownerId: shopId,
-              namespace: "cookie_consent",
-              key: "settings",
-              type: "json",
-              value: JSON.stringify(settings),
-            },
-          ],
-        },
-      }
-    );
-  
-    const json = await result.json();
-  
-    console.log("🧾 METAFIELD SAVE RESULT:", JSON.stringify(json, null, 2));
-  
-    return json;
-  }
-  
+    }
+    `,
+    {
+      variables: {
+        metafields: [
+          {
+            ownerId: shopId,
+            namespace: "cookie_consent",
+            key: "settings",
+            type: "json",
+            value: JSON.stringify(settings),
+          },
+        ],
+      },
+    },
+  );
+}

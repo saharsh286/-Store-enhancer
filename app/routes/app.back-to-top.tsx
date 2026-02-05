@@ -62,7 +62,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       animation,
       visibility,
     },
+  
   });
+  console.log("back-to-top metafeild",saveBackToTopMetafield)
+
 
   return { success: true };
 };
@@ -95,69 +98,69 @@ export default function BackToTopPage() {
   return (
     <s-page heading="Back to Top">
       <Form method="post" data-save-bar>
-        <s-section heading="Back to top settings">
-          <s-paragraph>
-            The Back to Top widget adds a button that lets customers quickly
-            return to the top of the page while scrolling.
-          </s-paragraph>
+        <s-stack direction="block" gap="large">
+          {/* TOP DESCRIPTION */}
+          <s-section heading="Back to top settings">
+            <s-paragraph>
+              The Back to Top widget adds a button that lets customers quickly
+              return to the top of the page while scrolling.
+            </s-paragraph>
+          </s-section>
 
-          <s-switch
-            name="enabled"
-            label="Enable Back to Top"
-            details="Show Back to Top button on your store"
-            checked={enabled}
-            onChange={(e: any) => setEnabled(e.detail.checked)}
-          />
-        </s-section>
-        <s-grid-item
-          gridColumn="span 2"
-          border="base"
-          borderStyle="dashed"
-        ></s-grid-item>
-        <s-grid gridTemplateColumns="repeat(6, 1fr)" gap="small">
-          {/* SETTINGS */}
-          <s-grid-item gridColumn="span 2" border="base" borderStyle="dashed">
-            <s-section heading="Widget Settings">
-              {/* POSITION */}
-              <s-select
-                name="position"
-                label="Button position"
-                value={position}
-                onChange={(e: any) => setPosition(e.detail.value)}
-              >
-                <s-option value="bottom-right">Bottom Right</s-option>
-                <s-option value="bottom-left">Bottom Left</s-option>
-              </s-select>
+          {/* SETTINGS + PREVIEW GRID */}
+          <s-grid gridTemplateColumns="repeat(6, 1fr)" gap="small">
+            {/* SETTINGS */}
+            <s-grid-item gridColumn="span 2">
+              <s-section heading="Widget Settings">
+                {/* POSITION */}
+                <s-switch
+                  name="enabled"
+                  label="Enable Back to Top"
+                  details="Show Back to Top button on your store"
+                  checked={enabled}
+                  onChange={(e: any) => setEnabled(e.detail.checked)}
+                />
 
-              {/* VISIBILITY */}
-              <s-choice-list
-                name="visibility"
-                label="Button visibility"
-                values={[visibility]}
-                onChange={(e: any) => setVisibility(e.detail.value)}
-              >
-                <s-choice value="hidden">Hidden</s-choice>
-                <s-choice value="optional">Optional</s-choice>
-                <s-choice value="required">Required</s-choice>
-              </s-choice-list>
+                <s-select
+                  name="position"
+                  label="Button position"
+                  value={position}
+                  onChange={(e: any) => setPosition(e.detail.value)}
+                >
+                  <s-option value="bottom-right">Bottom Right</s-option>
+                  <s-option value="bottom-left">Bottom Left</s-option>
+                </s-select>
 
-              {/* COLOR */}
-              <s-color-field
-                name="color"
-                label="Button color"
-                value={color}
-                onChange={(e: any) => setColor(e.detail.value)}
-              />
-            </s-section>
-          </s-grid-item>
+                {/* VISIBILITY */}
+                <s-choice-list
+                  name="visibility"
+                  label="Button visibility"
+                  values={[visibility]}
+                  onChange={(e: any) => setVisibility(e.detail.value)}
+                >
+                  <s-choice value="hidden">Hidden</s-choice>
+                  <s-choice value="optional">Optional</s-choice>
+                  <s-choice value="required">Required</s-choice>
+                </s-choice-list>
 
-          {/* PREVIEW */}
-          <s-grid-item gridColumn="span 4">
-            <s-section heading="Preview">
-              <BackToTopPreview settings={previewSettings} />
-            </s-section>
-          </s-grid-item>
-        </s-grid>
+                {/* COLOR */}
+                <s-color-field
+                  name="color"
+                  label="Button color"
+                  value={color}
+                  onChange={(e: any) => setColor(e.detail.value)}
+                />
+              </s-section>
+            </s-grid-item>
+
+            {/* PREVIEW */}
+            <s-grid-item gridColumn="span 4">
+              <s-section heading="Preview">
+                <BackToTopPreview settings={previewSettings} />
+              </s-section>
+            </s-grid-item>
+          </s-grid>
+        </s-stack>
       </Form>
     </s-page>
   );
