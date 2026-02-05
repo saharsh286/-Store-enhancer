@@ -1,0 +1,25 @@
+{% assign back_to_top = shop.metafields.back_to_top.settings.value %}
+{% assign cookie_consent = shop.metafields.cookie_consent.settings.value %}
+
+<script>
+  // Convert new system to old variables (so your JS keeps working)
+  window.__BACK_TO_TOP_SETTINGS__ = {{ back_to_top | json }};
+  window.__COOKIE_CONSENT_SETTINGS__ = {{ cookie_consent | json }};
+
+
+  console.log("📦 Injected BackToTop:", window.__BACK_TO_TOP_SETTINGS__);
+  console.log("📦 Injected Cookie:", window.__COOKIE_CONSENT_SETTINGS__);
+</script>
+
+<script src="{{'back-to-top.js'| asset_url}}" defer></script>
+
+<script src="{{'cookie-consent.js'| asset_url}}" defer></script>
+<script src="{{ 'store-enhancer-loader.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Store Enhancer Widgets",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}

@@ -12,10 +12,7 @@ import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import prisma from "app/db.server";
 
-// 🔥 IMPORT METAFIELD SAVER
-import { saveCookieConsentMetafield } from "./shopify/cookieConsentMetafield.server";
-
-// 🔥 IMPORT PREVIEW (FIXED PATH)
+// 🔥 PREVIEW COMPONENT (UI SAFE)
 import CookiePreview from "../component/CookiePreview";
 
 /* ================= LOADER ================= */
@@ -75,7 +72,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     },
   });
 
-  // 🔥 SAVE TO SHOPIFY METAFIELD
+  // ✅ FIXED IMPORT METHOD (SERVER-ONLY)
+  const { saveCookieConsentMetafield } =
+    await import("./shopify/cookieConsentMetafield.server");
+
   await saveCookieConsentMetafield({
     admin,
     settings: {
@@ -97,7 +97,6 @@ export default function CookieConsentPage() {
   const actionData = useActionData<typeof action>();
   const app = useAppBridge();
 
-  // 🔥 STATE FOR LIVE PREVIEW
   const [enabled, setEnabled] = useState(settings.enabled);
   const [message, setMessage] = useState(settings.message);
   const [acceptText, setAcceptText] = useState(settings.acceptText);
@@ -124,7 +123,6 @@ export default function CookieConsentPage() {
     <s-page heading="Cookie Consent Banner">
       <Form method="post" data-save-bar>
         <s-stack gap="large">
-          {/* ================= INTRO SECTION ================= */}
           <s-section>
             <s-paragraph>
               Cookie Consent Banner helps you show a privacy notice to your
@@ -133,9 +131,7 @@ export default function CookieConsentPage() {
             </s-paragraph>
           </s-section>
 
-          {/* ================= SETTINGS + PREVIEW ================= */}
           <s-grid gridTemplateColumns="repeat(6, 1fr)" gap="small">
-            {/* SETTINGS */}
             <s-grid-item gridColumn="span 2" border="base" borderStyle="dashed">
               <s-section heading="Banner Settings">
                 <s-stack gap="base">
@@ -188,7 +184,6 @@ export default function CookieConsentPage() {
               </s-section>
             </s-grid-item>
 
-            {/* PREVIEW */}
             <s-grid-item gridColumn="span 4">
               <s-section heading="Preview">
                 <CookiePreview settings={previewSettings} />

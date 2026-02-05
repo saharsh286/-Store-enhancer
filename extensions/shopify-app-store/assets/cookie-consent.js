@@ -1,6 +1,8 @@
 (function () {
   console.log("🍪 Advanced Cookie Consent loaded");
 
+  /* ================= DEFAULTS ================= */
+
   const DEFAULT_CONSENT = {
     necessary: true,
     analytics: false,
@@ -8,10 +10,12 @@
     preferences: false,
   };
 
+  /* ================= STORAGE ================= */
+
   function getSavedConsent() {
     try {
       return JSON.parse(localStorage.getItem("cookie_consent"));
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -27,7 +31,7 @@
     if (consent.marketing) loadFacebookPixel();
   }
 
-  // ================= SCRIPT LOADERS =================
+  /* ================= SCRIPT LOADERS ================= */
 
   function loadGoogleAnalytics() {
     if (window.__gaLoaded) return;
@@ -67,14 +71,26 @@
     `;
     document.head.appendChild(s);
 
-    console.log("Facebook Pixel loaded");
+    console.log("✅ Facebook Pixel loaded");
   }
 
-  // ================= INIT =================
+  /* ================= SETTINGS ================= */
 
-  const settings = window.__COOKIE_CONSENT_SETTINGS__ || { enabled: true };
+  const settings = window.__COOKIE_CONSENT_SETTINGS__ || {};
 
-  if (!settings.enabled) return;
+  if (settings.enabled === false) return;
+
+  const acceptText =
+    settings.acceptText && settings.acceptText.trim()
+      ? settings.acceptText
+      : "Accept all";
+
+  const rejectText =
+    settings.rejectText && settings.rejectText.trim()
+      ? settings.rejectText
+      : "Reject all";
+
+  /* ================= CONSENT CHECK ================= */
 
   const savedConsent = getSavedConsent();
   if (savedConsent) {
@@ -82,7 +98,7 @@
     return;
   }
 
-  // ================= UI =================
+  /* ================= BANNER ================= */
 
   const banner = document.createElement("div");
   banner.id = "cookie-consent-banner";
@@ -118,11 +134,11 @@
   buttons.style.gap = "10px";
 
   const rejectBtn = document.createElement("button");
-  rejectBtn.innerText = "Reject all";
+  rejectBtn.innerText = rejectText;
   styleSecondaryButton(rejectBtn);
 
   const acceptBtn = document.createElement("button");
-  acceptBtn.innerText = "Accept all";
+  acceptBtn.innerText = acceptText;
   stylePrimaryButton(acceptBtn);
 
   const customizeBtn = document.createElement("button");
@@ -133,7 +149,7 @@
   banner.append(text, buttons);
   document.body.appendChild(banner);
 
-  // ================= MODAL =================
+  /* ================= MODAL ================= */
 
   const modal = document.createElement("div");
   modal.style = `
@@ -169,7 +185,7 @@
   modal.appendChild(modalBox);
   document.body.appendChild(modal);
 
-  // ================= BUTTON LOGIC =================
+  /* ================= BUTTON LOGIC ================= */
 
   acceptBtn.onclick = function () {
     const consent = {
@@ -213,7 +229,7 @@
     banner.remove();
   };
 
-  // ================= STYLES =================
+  /* ================= STYLES ================= */
 
   function stylePrimaryButton(btn) {
     btn.style = `
