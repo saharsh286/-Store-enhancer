@@ -1,0 +1,119 @@
+/* ================= MAIN BAR ================= */
+
+.sticky-atc-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  bottom: 20px;
+  width: calc(100% - 40px);
+  max-width: 1100px;
+
+  padding: 16px 24px;
+  border-radius: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+
+  z-index: 999999;
+
+  transition: all 0.35s ease;
+  opacity: 0;
+}
+
+/* Show animation */
+.sticky-atc-bar.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ================= PRODUCT INFO ================= */
+
+.atc-product-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+/* Image */
+.atc-product-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* Text wrapper */
+.atc-text {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Title */
+.atc-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #bebcbc;
+}
+
+/* Price */
+.atc-price {
+  font-size: 14px;
+  color: #e8e6e6;
+  margin-top: 4px;
+}
+
+/* ================= VARIANT ================= */
+
+.atc-variant select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+
+/* ================= BUTTON ================= */
+
+.sticky-atc-button {
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+}
+
+.sticky-atc-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+.atc-price {
+  font-size: 15px;
+  font-weight: 500;
+  color: #00ffae;
+  margin-top: 6px;
+}
+
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 768px) {
+  .sticky-atc-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .sticky-atc-button {
+    width: 100%;
+  }
+}

@@ -6,7 +6,7 @@ type CookieSettings = {
   position: string;
   color: string;
 };
-
+console.log("✅ saveCookies box Metafield CALLED");
 export async function saveCookieConsentMetafield({
   admin,
   settings,
@@ -25,6 +25,8 @@ export async function saveCookieConsentMetafield({
 
   const shopData = await shopResponse.json();
   const shopId = shopData?.data?.shop?.id;
+
+  (console.log("Shopdata", shopData), console.log("shopid", shopId));
 
   if (!shopId) {
     throw new Error("Shop ID not found");

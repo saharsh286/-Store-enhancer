@@ -1,0 +1,25 @@
+{% assign settings = shop.metafields.sticky_add_to_cart.settings.value %}
+
+<script>
+  console.log("Sticky Add To Cart Metafield:", {{ settings | json }});
+</script>
+
+{% if settings %}
+  <div
+    id="sticky-add-to-cart-settings"
+    data-settings='{{ settings | json }}'
+    style="display:none;">
+  </div>
+
+  {{ 'sticky-add-to-cart.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'sticky-add-to-cart.js' | asset_url }}" defer></script>
+
+{% endif %}
+
+{% schema %}
+{
+  "name": "Sticky Add To Cart",
+  "target": "section",
+  "settings": []
+}
+{% endschema %}

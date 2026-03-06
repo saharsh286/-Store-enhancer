@@ -1,0 +1,56 @@
+.srt-country-preview-wrapper {
+    width: 100%;
+    min-height: 220px;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+  }
+  
+  /* Enabled State */
+  .srt-country-preview-wrapper.enabled {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Disabled State */
+  .srt-country-preview-wrapper.disabled {
+    background: #f6f6f7;
+    opacity: 0.6;
+  }
+  
+  /* Card */
+  .srt-country-preview-card {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 12px;
+    text-align: center;
+    width: 320px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  }
+  
+  .srt-country-preview-card h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+  .srt-country-preview-card p {
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+  
+  .srt-country-preview-card button {
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: none;
+    background: #111;
+    color: white;
+    cursor: pointer;
+  }
+  
+  /* Disabled Text */
+  .srt-country-disabled {
+    font-size: 14px;
+    font-weight: 500;
+  }

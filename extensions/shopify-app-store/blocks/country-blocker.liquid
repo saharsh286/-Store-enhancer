@@ -1,0 +1,20 @@
+{% assign country_settings = shop.metafields.srt_country_blocker.settings.value %}
+
+{% if country_settings and country_settings.enabled %}
+  <div
+    id="srt-country-blocker"
+    data-settings='{{ country_settings | json }}'
+    data-country="{{ localization.country.iso_code }}"
+  ></div>
+
+  <link rel="stylesheet" href="{{ "country-blocker.css" | asset_url }}">
+  <script src="{{ "country-blocker.js" | asset_url }}" defer></script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Country Blocker",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}`

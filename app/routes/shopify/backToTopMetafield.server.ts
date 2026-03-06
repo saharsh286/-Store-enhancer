@@ -23,8 +23,9 @@ export async function saveBackToTopMetafield({
     `);   
   
     const shopJson: any = await shopRes.json();
+    console.log("shop json",shopJson)
     const shopId = shopJson.data.shop.id;
-  
+    console.log("shopid",shopId)
     console.log(" SHOP ID:", shopId);
   
     let fixedColor = settings.color;

@@ -37,22 +37,23 @@ model Session {
 }
 
 model CookieConsentSettings {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  shop        String   @unique
+  shop String @unique
 
-  enabled     Boolean  @default(true)
+  enabled Boolean @default(true)
 
-  message     String
-  acceptText  String
-  rejectText  String
+  message    String
+  acceptText String
+  rejectText String
 
-  position    String
-  color       String
+  position String
+  color    String
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+
 model BackToTopSettings {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   shop       String   @unique
@@ -63,4 +64,53 @@ model BackToTopSettings {
   visibility String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model StickyAddToCartSettings {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  shop String @unique
+
+  enabled Boolean @default(true)
+
+  position         String
+  scrollPercentage Int
+
+  backgroundColor String  
+  buttonColor     String
+  buttonText      String   @default("Add to Cart")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+model CountryBlockerSettings {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  shop String @unique
+
+  enabled Boolean @default(false)
+
+  mode String        // "block" | "whitelist"
+  countryCodes String[]  // ["IN", "US", "CA"]
+
+  message   String
+  alignment String   // "left" | "center" | "right"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model WhatsAppChatSettings {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  shop String @unique
+
+  enabled Boolean @default(true)
+
+  phone           String
+  buttonLabel     String   @default("Chat with us")
+  profileName     String
+  profileSubtitle String
+  defaultMessage  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -1,256 +1,139 @@
-(function () {
-  console.log("🍪 Advanced Cookie Consent loaded");
+document.addEventListener("DOMContentLoaded", function () {
+  if (window.__SRT_COOKIE_INITIALIZED__) return;
+  window.__SRT_COOKIE_INITIALIZED__ = true;
 
-  /* ================= DEFAULTS ================= */
+  console.log("🍪 COOKIE JS STARTED");
 
-  const DEFAULT_CONSENT = {
-    necessary: true,
-    analytics: false,
-    marketing: false,
-    preferences: false,
-  };
+  const settingsElement = document.getElementById("cookie-consent-settings");
 
-  /* ================= STORAGE ================= */
-
-  function getSavedConsent() {
-    try {
-      return JSON.parse(localStorage.getItem("cookie_consent"));
-    } catch {
-      return null;
-    }
-  }
-
-  function saveConsent(consent) {
-    localStorage.setItem("cookie_consent", JSON.stringify(consent));
-  }
-
-  function applyConsent(consent) {
-    console.log("🍪 Applying consent:", consent);
-
-    if (consent.analytics) loadGoogleAnalytics();
-    if (consent.marketing) loadFacebookPixel();
-  }
-
-  /* ================= SCRIPT LOADERS ================= */
-
-  function loadGoogleAnalytics() {
-    if (window.__gaLoaded) return;
-    window.__gaLoaded = true;
-
-    const s = document.createElement("script");
-    s.src = "https://www.googletagmanager.com/gtag/js?id=G-XXXX";
-    s.async = true;
-    document.head.appendChild(s);
-
-    window.dataLayer = window.dataLayer || [];
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag("js", new Date());
-    gtag("config", "G-XXXX");
-
-    console.log("✅ Google Analytics loaded");
-  }
-
-  function loadFacebookPixel() {
-    if (window.__fbLoaded) return;
-    window.__fbLoaded = true;
-
-    const s = document.createElement("script");
-    s.innerHTML = `
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', 'XXXX');
-      fbq('track', 'PageView');
-    `;
-    document.head.appendChild(s);
-
-    console.log("✅ Facebook Pixel loaded");
-  }
-
-  /* ================= SETTINGS ================= */
-
-  const settings = window.__COOKIE_CONSENT_SETTINGS__ || {};
-
-  if (settings.enabled === false) return;
-
-  const acceptText =
-    settings.acceptText && settings.acceptText.trim()
-      ? settings.acceptText
-      : "Accept all";
-
-  const rejectText =
-    settings.rejectText && settings.rejectText.trim()
-      ? settings.rejectText
-      : "Reject all";
-
-  /* ================= CONSENT CHECK ================= */
-
-  const savedConsent = getSavedConsent();
-  if (savedConsent) {
-    applyConsent(savedConsent);
+  if (!settingsElement) {
+    console.log("Settings element not found");
     return;
   }
 
-  /* ================= BANNER ================= */
+  const settings = JSON.parse(settingsElement.dataset.settings || "{}");
 
+  if (!settings.enabled) {
+    console.log("Banner disabled");
+    return;
+  }
+  // ✅ CHECK IF USER ALREADY GAVE CONSENT
+  const existingChoice = localStorage.getItem("srt_cookie_choice");
+
+  if (
+    existingChoice === "accepted" ||
+    existingChoice === "rejected" ||
+    existingChoice === "customized"
+  ) {
+    console.log("Consent already given:", existingChoice);
+    return; // 🚀 STOP banner from showing again
+  }
+
+  /* Dynamic Style Injection */
+  const style = document.createElement("style");
+  style.innerHTML = `
+    .srt-cookie-banner {
+      background: ${settings.color};
+    }
+  `;
+  document.head.appendChild(style);
+
+  /* Create Banner */
   const banner = document.createElement("div");
-  banner.id = "cookie-consent-banner";
-  banner.style = `
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 20px;
-    max-width: 1100px;
-    width: calc(100% - 40px);
-    background: ${settings.color || "#111"};
-    color: #fff;
-    padding: 16px 20px;
-    border-radius: 12px;
-    z-index: 999999;
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;
+  banner.className = `srt-cookie-banner ${settings.position === "top" ? "top" : "bottom"}`;
+  // color change //
+  banner.style.background = settings.color || "#111";
+
+  banner.innerHTML = `
+    <div class="srt-cookie-container">
+      <div class="srt-cookie-text">
+        ${settings.message}
+      </div>
+
+      <div class="srt-cookie-actions">
+        <button class="srt-cookie-accept">
+          ${settings.acceptText}
+        </button>
+
+        <button class="srt-cookie-reject">
+          ${settings.rejectText}
+        </button>
+
+        <button class="srt-cookie-customize">
+          Customize
+        </button>
+      </div>
+    </div>
   `;
 
-  const text = document.createElement("div");
-  text.innerText =
-    settings.message ||
-    "We use cookies to improve your experience and analyze traffic.";
-  text.style.fontSize = "14px";
-  text.style.flex = "1";
-
-  const buttons = document.createElement("div");
-  buttons.style.display = "flex";
-  buttons.style.gap = "10px";
-
-  const rejectBtn = document.createElement("button");
-  rejectBtn.innerText = rejectText;
-  styleSecondaryButton(rejectBtn);
-
-  const acceptBtn = document.createElement("button");
-  acceptBtn.innerText = acceptText;
-  stylePrimaryButton(acceptBtn);
-
-  const customizeBtn = document.createElement("button");
-  customizeBtn.innerText = "Customize";
-  styleSecondaryButton(customizeBtn);
-
-  buttons.append(rejectBtn, customizeBtn, acceptBtn);
-  banner.append(text, buttons);
   document.body.appendChild(banner);
 
-  /* ================= MODAL ================= */
-
-  const modal = document.createElement("div");
-  modal.style = `
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  `;
-
-  const modalBox = document.createElement("div");
-  modalBox.style = `
-    background: #fff;
-    color: #000;
-    width: 100%;
-    max-width: 500px;
-    border-radius: 14px;
-    padding: 20px;
-    font-family: inherit;
-  `;
-
-  modalBox.innerHTML = `
-    <h3 style="margin-top:0">Cookie Preferences</h3>
-    <label><input type="checkbox" disabled checked> Necessary (always on)</label><br><br>
-    <label><input id="cc-analytics" type="checkbox"> Analytics</label><br><br>
-    <label><input id="cc-marketing" type="checkbox"> Marketing</label><br><br>
-    <label><input id="cc-preferences" type="checkbox"> Preferences</label><br><br>
-    <button id="cc-save">Save preferences</button>
-  `;
-
-  modal.appendChild(modalBox);
-  document.body.appendChild(modal);
-
-  /* ================= BUTTON LOGIC ================= */
-
-  acceptBtn.onclick = function () {
-    const consent = {
-      necessary: true,
-      analytics: true,
-      marketing: true,
-      preferences: true,
-    };
-    saveConsent(consent);
-    applyConsent(consent);
+  banner.querySelector(".srt-cookie-accept").addEventListener("click", () => {
+    localStorage.setItem("srt_cookie_choice", "accepted");
     banner.remove();
-  };
+  });
 
-  rejectBtn.onclick = function () {
-    const consent = {
-      necessary: true,
-      analytics: false,
-      marketing: false,
-      preferences: false,
-    };
-    saveConsent(consent);
-    applyConsent(consent);
+  banner.querySelector(".srt-cookie-reject").addEventListener("click", () => {
+    localStorage.setItem("srt_cookie_choice", "rejected");
     banner.remove();
-  };
+  });
+  banner
+    .querySelector(".srt-cookie-customize")
+    .addEventListener("click", () => {
+      const overlay = document.createElement("div");
+      overlay.className = "srt-cookie-overlay";
 
-  customizeBtn.onclick = function () {
-    modal.style.display = "flex";
-  };
-
-  document.getElementById("cc-save").onclick = function () {
-    const consent = {
-      necessary: true,
-      analytics: document.getElementById("cc-analytics").checked,
-      marketing: document.getElementById("cc-marketing").checked,
-      preferences: document.getElementById("cc-preferences").checked,
-    };
-
-    saveConsent(consent);
-    applyConsent(consent);
-    modal.style.display = "none";
-    banner.remove();
-  };
-
-  /* ================= STYLES ================= */
-
-  function stylePrimaryButton(btn) {
-    btn.style = `
-      background:#fff;
-      color:#000;
-      border:none;
-      padding:9px 16px;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:600;
+      overlay.innerHTML = `
+      <div class="srt-cookie-modal">
+        <h3>Cookie Preferences</h3>
+  
+        <div class="srt-cookie-option">
+          <span>Necessary Cookies</span>
+          <input type="checkbox" checked disabled />
+        </div>
+  
+        <div class="srt-cookie-option">
+          <span>Analytics Cookies</span>
+          <input type="checkbox" id="analytics-toggle" />
+        </div>
+  
+        <div class="srt-cookie-option">
+          <span>Marketing Cookies</span>
+          <input type="checkbox" id="marketing-toggle" />
+        </div>
+  
+        <button class="srt-cookie-save">Save Preferences</button>
+      </div>
     `;
-  }
 
-  function styleSecondaryButton(btn) {
-    btn.style = `
-      background:transparent;
-      color:#fff;
-      border:1px solid rgba(255,255,255,0.5);
-      padding:8px 14px;
-      border-radius:8px;
-      cursor:pointer;
-    `;
-  }
-})();
+      document.body.appendChild(overlay);
+
+      overlay
+        .querySelector(".srt-cookie-save")
+        .addEventListener("click", () => {
+          const analytics = overlay.querySelector("#analytics-toggle").checked;
+          const marketing = overlay.querySelector("#marketing-toggle").checked;
+
+          const preferences = {
+            necessary: true,
+            analytics,
+            marketing,
+          };
+
+          localStorage.setItem(
+            "srt_cookie_preferences",
+            JSON.stringify(preferences),
+          );
+          localStorage.setItem("srt_cookie_choice", "customized");
+
+          overlay.remove();
+          banner.remove();
+        });
+
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) {
+          overlay.remove();
+        }
+      });
+    });
+});

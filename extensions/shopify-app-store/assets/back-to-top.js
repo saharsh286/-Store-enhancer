@@ -1,43 +1,79 @@
 (function () {
-    const settings = window.__BACK_TO_TOP_SETTINGS__ || {
-      enabled: true,
-      position: "bottom-right",
-      color: "#000",
-    };
-  
+
+  if (window.__SRT_BACK_TO_TOP_INITIALIZED__) return;
+  window.__SRT_BACK_TO_TOP_INITIALIZED__ = true;
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll(
+      ".srt-back-to-top"
+    ).forEach(el => el.remove());
+
+    const settingsElement = document.getElementById("back-to-top-settings");
+    if (!settingsElement) return;
+
+    const settings = JSON.parse(settingsElement.dataset.settings || "{}");
+    console.log("SETTINGS:", settings);
+
     if (!settings.enabled) return;
-  
-    function init() {
-      const btn = document.getElementById("back-to-top-btn");
-      if (!btn) return;
-  
-      // Apply styles from settings
-      btn.style.background = settings.color || "#000";
-  
-      if (settings.position === "bottom-left") {
-        btn.style.left = "20px";
-        btn.style.right = "auto";
-      } else {
-        btn.style.right = "20px";
-        btn.style.left = "auto";
-      }
-  
-      // Show / hide on scroll
-      window.addEventListener("scroll", function () {
-        if (window.scrollY > 200) btn.style.display = "block";
-        else btn.style.display = "none";
-      });
-  
-      // Scroll to top
-      btn.addEventListener("click", function () {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
+
+    // 🔹 VISIBILITY VALUE
+    const visibility = (settings.visibility || "")
+      .toString()
+      .toLowerCase()
+      .trim();
+
+    console.log("VISIBILITY:", visibility);
+
+    // 🔴 If hidden → stop everything
+    if (visibility.includes("hidden")) {
+      return;
     }
-  
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", init);
+
+    // 🔹 Create button
+    const button = document.createElement("div");
+    button.className = "srt-back-to-top";
+    button.innerHTML = "↑";
+
+    // 🔹 Position
+    const pos = (settings.position || "")
+      .toString()
+      .toLowerCase()
+      .trim();
+
+    if (pos.includes("left")) {
+      button.classList.add("left");
     } else {
-      init();
+      button.classList.add("right");
     }
-  })();
-  
+
+    // 🔹 Color
+    button.style.background = settings.color || "#000";
+    button.style.color = "#fff";
+
+    document.body.appendChild(button);
+
+    // 🟢 REQUIRED → always visible
+    if (visibility.includes("required")) {
+      button.classList.add("show");
+    }
+
+    // 🟡 OPTIONAL → show on scroll
+    if (visibility.includes("optional")) {
+      window.addEventListener("scroll", function () {
+        if (window.scrollY > 200) {
+          button.classList.add("show");
+        } else {
+          button.classList.remove("show");
+        }
+      });
+    }
+
+    // 🔹 Click scroll
+    button.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+  });
+
+})();

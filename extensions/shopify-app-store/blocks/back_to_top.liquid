@@ -1,53 +1,26 @@
-{% assign settings = shop.metafields.back_to_top.settings.value %}
-<script>
-  console.log("🍪 back to top from metafield:",assign settings = shop.metafields.back_to_top.settings.value | json );
-</script>
-
-{% if settings and settings.enabled %}
-  <button
-    id="back-to-top-btn"
-    style="
-          position: fixed;
-          bottom: 20px;
-          {% if settings.position == 'bottom-left' %}
-            left: 20px;
-          {% else %}
-            right: 20px;
-          {% endif %}
-      background: {% if settings.color contains '#' %}{{ settings.color }}{% else %}#{{ settings.color }}{% endif %} !important;
-          color: white;
-          padding: 12px 16px;
-          border-radius: 50%;
-          border: none;
-          cursor: pointer;
-          display: none;
-          z-index: 999999;
-    "
-  >
-    ↑
-  </button>
-
+  {% assign settings = shop.metafields.back_to_top.settings.value %}
   <script>
-    const btn = document.getElementById('back-to-top-btn');
-
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 200) {
-        btn.style.display = 'block';
-      } else {
-        btn.style.display = 'none';
-      }
-    });
-
-    btn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    console.log("back to top data Metafield Raw:", {{ settings | json }});
   </script>
-{% endif %}
 
-{% schema %}
-{
-  "name": "Back To Top Button",
-  "target": "section",
-  "settings": []
-}
-{% endschema %}
+
+
+  {% if settings %}
+    <div 
+      id="back-to-top-settings"
+      data-settings='{{ settings | json }}'
+      style="display:none;">
+    </div>
+  {% endif %}
+
+  {{ 'back-to-top.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'back-to-top.js' | asset_url }}" defer></script>
+
+  {% schema %}
+  {
+    "name": "Back To Top",
+    "target": "section",
+    "settings": []
+  }
+
+  {% endschema %}

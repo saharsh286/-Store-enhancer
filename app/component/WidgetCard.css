@@ -1,0 +1,55 @@
+.srt-widget-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+  }
+  
+  .srt-widget-card:hover {
+    transform: translateY(-4px);
+  }
+  
+  .srt-widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .srt-widget-card h3 {
+    font-size: 16px;
+    margin: 0;
+  }
+  
+  .srt-widget-card p {
+    font-size: 13px;
+    margin: 10px 0 16px;
+    color: #555;
+  }
+  
+  .srt-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .srt-badge.active {
+    background: #d4f7dc;
+    color: #1a7f37;
+  }
+  
+  .srt-badge.inactive {
+    background: #fbe4e6;
+    color: #b42318;
+  }
+  
+  .srt-config-btn {
+    display: inline-block;
+    padding: 8px 14px;
+    background: #111;
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+  }

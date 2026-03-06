@@ -1,0 +1,24 @@
+{% assign settings = shop.metafields.whatsapp_chat.settings.value %}
+
+<script>
+  console.log("WhatsApp Chat Metafield:", {{ settings | json }});
+</script>
+
+{% if settings %}
+  <div 
+    id="whatsapp-chat-settings"
+    data-settings='{{ settings | json }}'
+    style="display:none;">
+  </div>
+
+  {{ 'whatsapp-chat.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'whatsapp-chat.js' | asset_url }}" defer></script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "WhatsApp Chat",
+  "target": "section",
+  "settings": []
+}
+{% endschema %}

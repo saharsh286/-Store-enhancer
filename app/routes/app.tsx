@@ -17,12 +17,16 @@ export default function App() {
 
   return (
     <AppProvider embedded apiKey={apiKey}>
-      <s-app-nav>
-        <s-link href="/app">Home</s-link>
-        {/* <s-link href="/app/cookie-consent">Cookie Consent</s-link>{" "}
-        <s-link href="/app/back-to-top">back-to-top</s-link> */}
-      </s-app-nav>
-      <Outlet />
+    <s-app-nav>
+    <s-link href="/app">Dashboard</s-link>
+<s-link href="/app/country-blocker">Country Blocker</s-link>
+<s-link href="/app/cookie-consent">Cookie Consent</s-link>
+<s-link href="/app/sticky-add-to-cart">Sticky ATC</s-link>
+<s-link href="/app/back-to-top">Back To Top</s-link>
+<s-link href="/app/whatsapp-chat">WhatsApp Chat</s-link>
+</s-app-nav>
+
+<Outlet />
     </AppProvider>
   );
 }

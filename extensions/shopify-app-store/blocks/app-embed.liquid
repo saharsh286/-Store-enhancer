@@ -1,16 +1,20 @@
 {% assign settings = shop.metafields.cookie_consent.settings.value %}
 
-<script>
-  window.__COOKIE_CONSENT_SETTINGS__ = {{ settings | json }};
-  console.log("🍪 Cookie settings from metafield:", window.__COOKIE_CONSENT_SETTINGS__);
-</script>
+{% if settings and settings.enabled %}
+  <div
+    id="cookie-consent-settings"
+    data-settings='{{ settings | json }}'
+    style="display:none;">
+  </div>
 
-<script src="{{ 'cookie-consent.js' | asset_url }}" defer></script>
+  {{ 'cookie-consent.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'cookie-consent.js' | asset_url }}" defer></script>
+{% endif %}
 
 {% schema %}
 {
   "name": "Cookie Consent Banner",
   "target": "section",
-  "settings": []
+  "settings": []  
 }
-{% endschema %}
+ {% endschema %}

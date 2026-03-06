@@ -5,10 +5,10 @@
   // Convert new system to old variables (so your JS keeps working)
   window.__BACK_TO_TOP_SETTINGS__ = {{ back_to_top | json }};
   window.__COOKIE_CONSENT_SETTINGS__ = {{ cookie_consent | json }};
+  
 
-
-  console.log("📦 Injected BackToTop:", window.__BACK_TO_TOP_SETTINGS__);
-  console.log("📦 Injected Cookie:", window.__COOKIE_CONSENT_SETTINGS__);
+  {% comment %} console.log("📦 Injected BackToTop:",{{ back_to_top | json }}); {% endcomment %}
+  console.log("📦 Injected Cookie:", {{ cookie_consent | json }});
 </script>
 
 <script src="{{'back-to-top.js'| asset_url}}" defer></script>

@@ -5,108 +5,247 @@ import {
 } from "react-router";
 import { authenticate } from "../shopify.server";
 import { useState } from "react";
-import { setBackToTopEnabled } from "./shopify/dashboardMetafield.server";
-import { setCookieConsentEnabled } from "./shopify/dashboardMetafield.server";
+
+import {
+  setBackToTopEnabled,
+  setCookieConsentEnabled,
+  setStickyAddToCartEnabled,
+} from "./shopify/dashboardMetafield.server";
 
 /* ================= LOADER ================= */
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  console.log("📥 DASHBOARD LOADER CALLED");
-  const { session } = await authenticate.admin(request);
-  console.log("🏪 DASHBOARD LOADER SHOP:", session.shop);
-  return null;
+  const { admin } = await authenticate.admin(request);
+
+  async function getStatus(namespace: string) {
+    const res = await admin.graphql(`
+      query {
+        shop {
+          metafield(namespace: "${namespace}", key: "settings") {
+            value
+          }
+        }
+      }
+    `);
+
+    const data: any = await res.json();
+    const metafield = data?.data?.shop?.metafield;
+
+    if (!metafield?.value) return false;
+
+    try {
+      const parsed = JSON.parse(metafield.value);
+      return parsed?.enabled === true || parsed?.enabled === "true";
+    } catch {
+      return false;
+    }
+  }
+
+  return {
+    backToTopEnabled: await getStatus("back_to_top"),
+    cookieEnabled: await getStatus("cookie_consent"),
+    stickyEnabled: await getStatus("sticky_add_to_cart"),
+    countryBlockerEnabled: await getStatus("country_blocker"),
+    whatsappEnabled: await getStatus("whatsapp_chat"),
+  };
 };
 
 /* ================= ACTION ================= */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  console.log("📤 DASHBOARD ACTION CALLED");
-
   const { admin } = await authenticate.admin(request);
   const formData = await request.formData();
 
   const backToTopEnabled = formData.get("backToTopEnabled") === "on";
   const cookieEnabled = formData.get("cookieEnabled") === "on";
-
-  console.log("🧩 DASHBOARD FORM DATA:", {
-    backToTopEnabled,
-    cookieEnabled,
-  });
+  const stickyEnabled = formData.get("stickyEnabled") === "on";
 
   await setBackToTopEnabled(admin, backToTopEnabled);
   await setCookieConsentEnabled(admin, cookieEnabled);
+  await setStickyAddToCartEnabled(admin, stickyEnabled);
 
   return null;
 };
 
-/* ================= PAGE ================= */
+import { useLoaderData } from "react-router";
+
 export default function Dashboard() {
-  const [backToTopEnabled, setBackToTopEnabled] = useState(true);
-  const [cookieEnabled, setCookieEnabled] = useState(true);
+  const {
+    backToTopEnabled,
+    cookieEnabled,
+    stickyEnabled,
+    countryBlockerEnabled,
+    whatsappEnabled,
+  } = useLoaderData<typeof loader>();
+
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
+
+  const showRow = (enabled: boolean) => {
+    if (filter === "active") return enabled;
+    if (filter === "inactive") return !enabled;
+    return true;
+  };
 
   return (
-    <Form method="post" data-save-bar>
-      <s-page heading="Store Enhancer Dashboard">
-        <s-section>
-          <s-paragraph>
-            Manage and customize your store widgets from here.
-          </s-paragraph>
-        </s-section>
+    <s-page heading="Store Enhancer">
+      <s-section>
+        <s-paragraph>
+          Manage all your store enhancement tools from one place.
+        </s-paragraph>
+      </s-section>
 
-        <s-grid gridTemplateColumns="repeat(6, 1fr)" gap="small">
+      <s-section heading="Widgets">
 
-          {/* ================= BACK TO TOP ================= */}
-          <s-grid-item gridColumn="span 3">
-            <s-section heading="Back To Top">
-              <s-paragraph>
-                Adds a floating button that scrolls the page back to the top.
-              </s-paragraph>
+        <s-stack direction="inline" gap="base" alignItems="center">
+          <s-button
+            variant={filter === "all" ? "primary" : "tertiary"}
+            onClick={() => setFilter("all")}
+          >
+            All
+          </s-button>
 
-              <s-switch
-                name="backToTopEnabled"
-                label="Enable Back To Top"
-                checked={backToTopEnabled}
-                onChange={(e: any) =>
-                  setBackToTopEnabled(e.detail.checked)
-                }
-              />
+          <s-button
+            variant={filter === "active" ? "primary" : "tertiary"}
+            onClick={() => setFilter("active")}
+          >
+            Active
+          </s-button>
 
-              <s-stack direction="inline" gap="base">
-                <s-link href="/app/back-to-top">
-                  <s-button variant="tertiary">
-                    Customize Back To Top →
-                  </s-button>
-                </s-link>
-              </s-stack>
-            </s-section>
-          </s-grid-item>
+          <s-button
+            variant={filter === "inactive" ? "primary" : "tertiary"}
+            onClick={() => setFilter("inactive")}
+          >
+            Inactive
+          </s-button>
+        </s-stack>
 
-          {/* ================= COOKIE CONSENT ================= */}
-          <s-grid-item gridColumn="span 3">
-            <s-section heading="Cookie Consent">
-              <s-paragraph>
-                Shows a cookie consent banner to comply with privacy regulations.
-              </s-paragraph>
+        <s-table>
+          <s-table-header-row>
+            <s-table-header>Icon</s-table-header>
+            <s-table-header>Widget</s-table-header>
+            <s-table-header>Description</s-table-header>
+            <s-table-header>Status</s-table-header>
+            <s-table-header></s-table-header>
+          </s-table-header-row>
 
-              <s-switch
-                name="cookieEnabled"
-                label="Enable Cookie Consent"
-                checked={cookieEnabled}
-                onChange={(e: any) =>
-                  setCookieEnabled(e.detail.checked)
-                }
-              />
+          <s-table-body>
 
-              <s-stack direction="inline" gap="base">
-                <s-link href="/app/cookie-consent">
-                  <s-button variant="tertiary">
-                    Customize Cookie Consent →
-                  </s-button>
-                </s-link>
-              </s-stack>
-            </s-section>
-          </s-grid-item>
+            {/* WhatsApp Chat */}
+            {showRow(whatsappEnabled) && (
+              <s-table-row>
+                <s-table-cell>
+                  <s-icon type="chat" />
+                </s-table-cell>
+                <s-table-cell>WhatsApp Chat</s-table-cell>
+                <s-table-cell>
+                  Add WhatsApp live chat support for customers.
+                </s-table-cell>
+                <s-table-cell>
+                  <s-badge tone={whatsappEnabled ? "success" : "critical"}>
+                    {whatsappEnabled ? "Active" : "Inactive"}
+                  </s-badge>
+                </s-table-cell>
+                <s-table-cell>
+                  <s-link href="/app/whatsapp-chat">
+                    <s-button variant="secondary">Manage</s-button>
+                  </s-link>
+                </s-table-cell>
+              </s-table-row>
+            )}
 
-        </s-grid>
-      </s-page>
-    </Form>
+            {/* Country Blocker */}
+            {showRow(countryBlockerEnabled) && (
+              <s-table-row>
+                <s-table-cell>
+                  <s-icon type="globe" />
+                </s-table-cell>
+                <s-table-cell>Country Blocker</s-table-cell>
+                <s-table-cell>
+                  Restrict or redirect visitors by country.
+                </s-table-cell>
+                <s-table-cell>
+                  <s-badge tone={countryBlockerEnabled ? "success" : "critical"}>
+                    {countryBlockerEnabled ? "Active" : "Inactive"}
+                  </s-badge>
+                </s-table-cell>
+                <s-table-cell>
+                  <s-link href="/app/country-blocker">
+                    <s-button variant="secondary">Manage</s-button>
+                  </s-link>
+                </s-table-cell>
+              </s-table-row>
+            )}
+
+            {/* Cookie Consent */}
+            {showRow(cookieEnabled) && (
+              <s-table-row>
+                <s-table-cell>
+                  <s-icon type="shield-check-mark" />
+                </s-table-cell>
+                <s-table-cell>Cookie Consent</s-table-cell>
+                <s-table-cell>
+                  Manage cookie banner and privacy compliance.
+                </s-table-cell>
+                <s-table-cell>
+                  <s-badge tone={cookieEnabled ? "success" : "critical"}>
+                    {cookieEnabled ? "Active" : "Inactive"}
+                  </s-badge>
+                </s-table-cell>
+                <s-table-cell>
+                  <s-link href="/app/cookie-consent">
+                    <s-button variant="secondary">Manage</s-button>
+                  </s-link>
+                </s-table-cell>
+              </s-table-row>
+            )}
+
+            {/* Sticky Add To Cart */}
+            {showRow(stickyEnabled) && (
+              <s-table-row>
+                <s-table-cell>
+                  <s-icon type="cart" />
+                </s-table-cell>
+                <s-table-cell>Sticky Add To Cart</s-table-cell>
+                <s-table-cell>
+                  Keep add-to-cart button visible while scrolling.
+                </s-table-cell>
+                <s-table-cell>
+                  <s-badge tone={stickyEnabled ? "success" : "critical"}>
+                    {stickyEnabled ? "Active" : "Inactive"}
+                  </s-badge>
+                </s-table-cell>
+                <s-table-cell>
+                  <s-link href="/app/sticky-add-to-cart">
+                    <s-button variant="secondary">Manage</s-button>
+                  </s-link>
+                </s-table-cell>
+              </s-table-row>
+            )}
+
+            {/* Back To Top */}
+            {showRow(backToTopEnabled) && (
+              <s-table-row>
+                <s-table-cell>
+                  <s-icon type="arrow-up" />
+                </s-table-cell>
+                <s-table-cell>Back To Top</s-table-cell>
+                <s-table-cell>
+                  Smooth scroll button to top of page.
+                </s-table-cell>
+                <s-table-cell>
+                  <s-badge tone={backToTopEnabled ? "success" : "critical"}>
+                    {backToTopEnabled ? "Active" : "Inactive"}
+                  </s-badge>
+                </s-table-cell>
+                <s-table-cell>
+                  <s-link href="/app/back-to-top">
+                    <s-button variant="secondary">Manage</s-button>
+                  </s-link>
+                </s-table-cell>
+              </s-table-row>
+            )}
+
+          </s-table-body>
+        </s-table>
+      </s-section>
+    </s-page>
   );
 }
