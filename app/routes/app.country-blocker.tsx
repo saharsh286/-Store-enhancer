@@ -1,11 +1,17 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import type {
+  ActionFunctionArgs,
+  HeadersFunction,
+  LoaderFunctionArgs,
+} from "react-router";
+
 import { Form, useLoaderData, useActionData } from "react-router";
 import { useEffect, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 
 import { authenticate } from "../shopify.server";
-import prisma from "app/db.server";
+import { boundary } from "@shopify/shopify-app-react-router/server";
 
+import { PrismaCountryBlocker } from "app/db/country-blocker";
 import CountryBlockerPreview from "../component/CountryBlockerPreview";
 
 /* ================= ELEMENT TYPES ================= */
@@ -18,83 +24,85 @@ type SelectElement = HTMLElement & { value: string };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
-  const shop = session.shop;
 
-  const settings = await prisma.countryBlockerSettings.upsert({
-    where: { shop },
-    update: {},
-    create: {
-      shop,
-      enabled: false,
-      mode: "block",
-      countryCodes: [],
-      message: "Sorry, your country is restricted.",
-      alignment: "center",
-    },
-  });
+  const settings = await PrismaCountryBlocker.get(session);
 
-  return { settings }; // ✅ NO json()
+  return { settings };
 };
 
 /* ================= ACTION ================= */
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session, admin } = await authenticate.admin(request);
-  const shop = session.shop;
+  try {
+    const { session, admin } = await authenticate.admin(request);
 
-  const formData = await request.formData();
+    const formData = await request.formData();
 
-  const countryCodesRaw = String(formData.get("countryCodes") || "");
+    const countryCodesRaw = String(formData.get("countryCodes") || "");
 
-  const finalSettings = {
-    enabled: formData.get("enabled") === "on",
-    mode: String(formData.get("mode") || "block"),
-    countryCodes: countryCodesRaw
-      .split(",")
-      .map((code) => code.trim().toUpperCase())
-      .filter(Boolean),
-    message: String(formData.get("message") || ""),
-    alignment: String(formData.get("alignment") || "center"),
-  };
+    const parsedData = {
+      enabled: formData.get("enabled") === "on",
+      mode: String(formData.get("mode") || "block"),
+      countryCodes: countryCodesRaw
+        .split(",")
+        .map((code) => code.trim().toUpperCase())
+        .filter(Boolean),
+      message: String(formData.get("message") || ""),
+      alignment: String(formData.get("alignment") || "center"),
+    };
 
-  /* ===== SAVE TO PRISMA ===== */
+    const dbRecords = {
+      ...parsedData,
+      shop: session.shop,
+    };
 
-  await prisma.countryBlockerSettings.upsert({
-    where: { shop },
-    update: finalSettings,
-    create: {
-      shop,
-      ...finalSettings,
-    },
-  });
+    /* ================= DB SAVE ================= */
 
-  /* ===== SAVE METAFIELD (SEPARATE FILE) ===== */
+    await PrismaCountryBlocker.upsert(dbRecords, session);
 
-  const { saveCountryBlockerMetafield } =
-    await import("./shopify/countryBlockerMetafield.server");
+    /* ================= METAFIELD SAVE ================= */
 
-  await saveCountryBlockerMetafield({
-    admin,
-    settings: finalSettings,
-  });
+    const { saveCountryBlockerMetafield } =
+      await import("./shopify/countryBlockerMetafield.server");
 
-  return { success: true };
+    await saveCountryBlockerMetafield({
+      admin,
+      settings: parsedData,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving country blocker settings:", error);
+
+    return {
+      success: false,
+      error: "Failed to save data",
+    };
+  }
 };
 
-/* ================= COMPONENT ================= */
+/* ================= PAGE ================= */
 
 export default function CountryBlockerPage() {
   const { settings } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const app = useAppBridge();
 
-  const [enabled, setEnabled] = useState(settings.enabled);
-  const [mode, setMode] = useState(settings.mode);
-  const [countryCodes, setCountryCodes] = useState(
-    settings.countryCodes.join(","),
+  const safeSettings = settings ?? {
+    enabled: false,
+    mode: "block",
+    countryCodes: [] as string[],
+    message: "Sorry, your country is restricted.",
+    alignment: "center",
+  };
+
+  const [enabled, setEnabled] = useState<boolean>(safeSettings.enabled);
+  const [mode, setMode] = useState<string>(safeSettings.mode);
+  const [countryCodes, setCountryCodes] = useState<string>(
+    safeSettings.countryCodes.join(","),
   );
-  const [message, setMessage] = useState(settings.message);
-  const [alignment, setAlignment] = useState(settings.alignment);
+  const [message, setMessage] = useState<string>(safeSettings.message);
+  const [alignment, setAlignment] = useState<string>(safeSettings.alignment);
 
   useEffect(() => {
     if (actionData?.success) {
@@ -104,9 +112,8 @@ export default function CountryBlockerPage() {
 
   return (
     <s-page heading="Country Blocker">
-      <Form method="post" data-save-bar>
+      <Form action="." method="post" data-save-bar>
         <s-stack direction="block" gap="large">
-          {/* Description Section */}
           <s-section>
             <s-stack direction="inline" gap="small" alignItems="center">
               <s-link href="/app">
@@ -118,13 +125,13 @@ export default function CountryBlockerPage() {
               </s-paragraph>
             </s-stack>
           </s-section>
- 
+
           <s-grid gridTemplateColumns="repeat(6, 1fr)" gap="small">
             {/* SETTINGS PANEL */}
+
             <s-grid-item gridColumn="span 2">
               <s-section heading="Widget Settings">
                 <s-stack gap="base">
-                  {/* Enable */}
                   <s-switch
                     name="enabled"
                     label="Enable Country Blocker"
@@ -136,7 +143,6 @@ export default function CountryBlockerPage() {
                     }
                   />
 
-                  {/* Mode */}
                   <s-select
                     name="mode"
                     label="Blocking Mode"
@@ -153,7 +159,6 @@ export default function CountryBlockerPage() {
                     </s-option>
                   </s-select>
 
-                  {/* Country Codes */}
                   <s-text-field
                     name="countryCodes"
                     label="Country Codes (Comma Separated)"
@@ -167,7 +172,6 @@ export default function CountryBlockerPage() {
                     }
                   />
 
-                  {/* Error Message */}
                   <s-text-field
                     name="message"
                     label="Inline Error Message"
@@ -179,7 +183,6 @@ export default function CountryBlockerPage() {
                     }
                   />
 
-                  {/* Alignment */}
                   <s-select
                     name="alignment"
                     label="Message Alignment"
@@ -198,7 +201,8 @@ export default function CountryBlockerPage() {
               </s-section>
             </s-grid-item>
 
-            {/* PREVIEW PANEL */}
+            {/* PREVIEW */}
+
             <s-grid-item gridColumn="span 4">
               <s-section heading="Preview">
                 <CountryBlockerPreview
@@ -218,3 +222,9 @@ export default function CountryBlockerPage() {
     </s-page>
   );
 }
+
+/* ================= HEADERS ================= */
+
+export const headers: HeadersFunction = (headersArgs) => {
+  return boundary.headers(headersArgs);
+};

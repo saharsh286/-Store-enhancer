@@ -4,13 +4,15 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!window.location.pathname.includes("/products/")) {
     return;
   }
-  const container = document.getElementById("srt-sticky-add-to-cart");
+  const container = document.getElementById("sticky-add-to-cart-settings");
+
   if (!container) {
     console.log("Sticky container not found");
     return;
   }
-
+  
   const settings = JSON.parse(container.dataset.settings || "{}");
+
 
   /* ================= GET PRODUCT FORM ================= */
 

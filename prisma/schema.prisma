@@ -46,6 +46,7 @@ model CookieConsentSettings {
   message    String
   acceptText String
   rejectText String
+   acceptColor String?   // new field
 
   position String
   color    String
@@ -100,13 +101,12 @@ model CountryBlockerSettings {
 }
 model WhatsAppChatSettings {
   id String @id @default(auto()) @map("_id") @db.ObjectId
-
   shop String @unique
 
   enabled Boolean @default(true)
 
   phone           String
-  buttonLabel     String   @default("Chat with us")
+  buttonLabel     String
   profileName     String
   profileSubtitle String
   defaultMessage  String

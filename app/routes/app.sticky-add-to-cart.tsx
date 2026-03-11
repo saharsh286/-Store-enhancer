@@ -3,6 +3,7 @@ import { Form, useLoaderData, useActionData } from "react-router";
 import { useEffect, useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
+import { PrismaStickyAddToCart } from "app/db/sticky-add-to-cart";
 import prisma from "app/db.server";
 import StickyAddToCartPreview from "../component/StickyAddToCartPreview";
 /* ================= TYPES ================= */
@@ -26,137 +27,57 @@ type ActionData = {
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
-  const shop = session.shop;
 
-  let settings = await prisma.stickyAddToCartSettings.findUnique({
-    where: { shop },
-  });
+  const settings = await PrismaStickyAddToCart.get(session);
 
-  // If settings don't exist, create default record
-  if (!settings) {
-    settings = await prisma.stickyAddToCartSettings.create({
-      data: {
-        shop,
-        enabled: true,
-        position: "bottom",
-        scrollPercentage: 50,
-        backgroundColor: "#000000",
-        buttonColor: "#ffffff",
-        buttonText: "Add to Cart", // ✅ ADD THIS
-      },
-    });
-  }
-  console.log("loader is working");
   return { settings };
 };
 
 /* ================= ACTION ================= */
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
-  const shop = session.shop;
+  try {
+    const { session, admin } = await authenticate.admin(request);
 
-  console.log("===== ACTION STARTED =====");
-  console.log("Shop:", shop);
+    const formData = await request.formData();
 
-  const formData = await request.formData();
+    const parsedData = {
+      enabled: formData.get("enabled") === "on",
+      position: String(formData.get("position") || "bottom"),
+      scrollPercentage: Number(formData.get("scrollPercentage") || 50),
+      backgroundColor: String(formData.get("backgroundColor") || "#000000"),
+      buttonColor: String(formData.get("buttonColor") || "#ffffff"),
+      buttonText: String(formData.get("buttonText") || "Add to Cart"),
+    };
 
-  const finalSettings = {
-    enabled: formData.get("enabled") === "on",
-    position: String(formData.get("position")),
-    scrollPercentage: Number(formData.get("scrollPercentage")),
-    backgroundColor: String(formData.get("backgroundColor")),
-    buttonColor: String(formData.get("buttonColor")),
-    buttonText: String(formData.get("buttonText")).trim() || "Add to Cart",
-  };
+    const dbRecords = {
+      ...parsedData,
+      shop: session.shop,
+    };
 
-  console.log("FINAL SETTINGS:");
-  console.log(JSON.stringify(finalSettings, null, 2));
+    /* ================= DB SAVE ================= */
 
-  /* ================= SAVE TO PRISMA ================= */
-  const prismaResult = await prisma.stickyAddToCartSettings.upsert({
-    where: { shop },
-    update: finalSettings,
-    create: {
-      shop,
-      ...finalSettings,
-    },
-  });
-  console.log("✅ PRISMA SAVE RESULT:");
-  console.log(JSON.stringify(prismaResult, null, 2));
+    await PrismaStickyAddToCart.upsert(dbRecords, session);
 
-  /* ================= GET SHOP GID ================= */
-  const shopResponse = await admin.graphql(`
-    query {
-      shop {
-        id
-        name
-      }
-    }
-  `);
+    /* ================= METAFIELD SAVE ================= */
 
-  const shopJson = await shopResponse.json();
+    const { saveStickyAddToCartMetafield } =
+      await import("./shopify/stickyAddToCartMetafield.server");
 
-  console.log("SHOP QUERY RESPONSE:");
-  console.log(JSON.stringify(shopJson, null, 2));
+    await saveStickyAddToCartMetafield({
+      admin,
+      finalSettings: parsedData,
+    });
 
-  const shopId = shopJson?.data?.shop?.id;
+    return { success: true, data: dbRecords };
+  } catch (error) {
+    console.error("Error saving sticky add to cart settings:", error);
 
-  if (!shopId) {
-    console.error("❌ SHOP ID NOT FOUND");
-    return { success: false };
+    return {
+      success: false,
+      error: "Failed to save data",
+    };
   }
-
-  console.log("✅ SHOP GID:", shopId);
-
-  /* ================= SAVE TO SHOPIFY METAFIELD ================= */
-  const metafieldResponse = await admin.graphql(
-    `
-    mutation SetMetafield($metafields: [MetafieldsSetInput!]!) {
-      metafieldsSet(metafields: $metafields) {
-        metafields {
-          id
-          namespace
-          key
-          value
-        }
-        userErrors {
-          field
-          message
-        }
-      }
-    }
-    `,
-    {
-      variables: {
-        metafields: [
-          {
-            ownerId: shopId,
-            namespace: "sticky_add_to_cart",
-            key: "settings",
-            type: "json",
-            value: JSON.stringify(finalSettings),
-          },
-        ],
-      },
-    },
-  );
-
-  const metafieldJson = await metafieldResponse.json();
-
-  console.log("METAFIELD RESPONSE:");
-  console.log(JSON.stringify(metafieldJson, null, 2));
-
-  if (metafieldJson?.data?.metafieldsSet?.userErrors?.length > 0) {
-    console.error("❌ METAFIELD USER ERRORS:");
-    console.error(metafieldJson.data.metafieldsSet.userErrors);
-  } else {
-    console.log("✅ METAFIELD SAVED SUCCESSFULLY");
-  }
-
-  console.log("===== ACTION END =====");
-
-  return { success: true };
 };
 
 type SwitchElement = HTMLInputElement & { checked: boolean };
@@ -198,7 +119,7 @@ export default function StickyAddToCart() {
   };
   return (
     <s-page heading="Sticky Add To Cart">
-      <Form method="post" data-save-bar>
+      <Form action="." method="post" data-save-bar>
         <s-stack gap="large">
           {/* ================= HEADER ================= */}
           <s-section>
@@ -295,6 +216,7 @@ export default function StickyAddToCart() {
                 </s-stack>
               </s-section>
             </s-grid-item>
+
             {/* RIGHT PREVIEW PANEL */}
             <s-grid-item gridColumn="span 4">
               <s-section heading="Preview">

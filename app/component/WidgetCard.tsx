@@ -1,11 +1,18 @@
 import "./WidgetCard.css";
 
+type Props = {
+  title: string;
+  description: string;
+  enabled: boolean;
+  link: string;
+};
+
 export default function WidgetCard({
   title,
   description,
   enabled,
   link,
-}: any) {
+}: Props) {
   return (
     <div className="srt-widget-card">
       <div className="srt-widget-header">

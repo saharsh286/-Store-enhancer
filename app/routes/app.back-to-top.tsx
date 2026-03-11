@@ -12,69 +12,53 @@ import { useAppBridge } from "@shopify/app-bridge-react";
 
 import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
-import prisma from "app/db.server";
-
+import { PrismaBackToTop } from "app/db/back-to-top";
 import { saveBackToTopMetafield } from "./shopify/backToTopMetafield.server";
 import BackToTopPreview from "../component/BackToTopPreview";
 
 /* ================= LOADER ================= */
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
-  const shop = session.shop;
 
-  const settings = {
-    shop,
-    enabled: true,
-    position: "bottom-right",
-    color: "#000000",
-    animation: "fade",
-    visibility: "optional",
-  };
+  const settings = await PrismaBackToTop.get(session);
 
   return { settings };
 };
 
 /* ================= ACTION ================= */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session, admin } = await authenticate.admin(request);
-  const shop = session.shop;
+  try {
+    const { session, admin } = await authenticate.admin(request);
 
-  const formData = await request.formData();
+    const formData = await request.formData();
 
-  const enabled = formData.get("enabled") === "on";
-  const position = String(formData.get("position") || "bottom-right");
-  const color = String(formData.get("color") || "#000000");
-  const animation = formData.get("animation") === "on" ? "fade" : "none";
-  const visibility = String(formData.get("visibility") || "optional");
+    const parsedData = {
+      enabled: formData.get("enabled") === "on",
+      position: String(formData.get("position") || "bottom-right"),
+      visibility: String(formData.get("visibility") || "optional"),
+      color: String(formData.get("color") || "#000000"),
+      animation: "fade",
+    };
 
-  await prisma.backToTopSettings.upsert({
-    where: { shop },
-    update: { enabled, position, color, animation, visibility },
-    create: { shop, enabled, position, color, animation, visibility },
-  });
+    const dbRecords = {
+      ...parsedData,
+      shop: session.shop,
+    };
 
-  console.log(
-    "data bsack to top",
-    await prisma.backToTopSettings.upsert({
-      where: { shop },
-      update: { enabled, position, color, animation, visibility },
-      create: { shop, enabled, position, color, animation, visibility },
-    }),
-  );
+    // call DB service
+    await PrismaBackToTop.upsert(dbRecords, session);
 
-  await saveBackToTopMetafield({
-    admin,
-    settings: {
-      enabled,
-      position,
-      color,
-      animation,
-      visibility,
-    },
-  });
-  console.log("back-to-top metafeild", saveBackToTopMetafield);
+    await saveBackToTopMetafield({
+      admin,
+      settings: parsedData,
+    });
 
-  return { success: true };
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+
+    return { success: false };
+  }
 };
 
 /* ================= PAGE ================= */
@@ -92,11 +76,18 @@ export default function BackToTopPage() {
   const actionData = useActionData<typeof action>();
   const app = useAppBridge();
 
-  const [enabled, setEnabled] = useState<boolean>(settings.enabled);
-  const [position, setPosition] = useState<string>(settings.position);
-  const [visibility, setVisibility] = useState<string>(settings.visibility);
-  const [color, setColor] = useState<string>(settings.color);
+  const safeSettings = settings ?? {
+    enabled: true,
+    position: "bottom-right",
+    visibility: "optional",
+    color: "#000000",
+    animation: "fade",
+  };
 
+  const [enabled, setEnabled] = useState<boolean>(safeSettings.enabled);
+  const [position, setPosition] = useState<string>(safeSettings.position);
+  const [visibility, setVisibility] = useState<string>(safeSettings.visibility);
+  const [color, setColor] = useState<string>(safeSettings.color);
   useEffect(() => {
     if (actionData?.success) {
       app.toast.show("Back to Top settings saved");
@@ -113,10 +104,11 @@ export default function BackToTopPage() {
 
   return (
     <s-page heading="Back to Top">
-      <Form method="post" data-save-bar>
+      <Form action="." method="post" data-save-bar>
         <s-stack direction="block" gap="large">
           <s-section>
-          <s-stack direction="inline" gap="small" alignItems="center">              <s-link href="/app">
+            <s-stack direction="inline" gap="small" alignItems="center">
+              <s-link href="/app">
                 <s-button variant="tertiary">←</s-button>
               </s-link>
 
@@ -128,6 +120,7 @@ export default function BackToTopPage() {
           </s-section>
 
           <s-grid gridTemplateColumns="repeat(6, 1fr)" gap="small">
+            {/* SETTINGS PANEL */}
             <s-grid-item gridColumn="span 2">
               <s-section heading="Widget Settings">
                 {/* SWITCH */}
@@ -188,6 +181,7 @@ export default function BackToTopPage() {
               </s-section>
             </s-grid-item>
 
+            {/* PREVIEW PANEL */}
             <s-grid-item gridColumn="span 4">
               <s-section heading="Preview">
                 <BackToTopPreview settings={previewSettings} />

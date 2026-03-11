@@ -1,7 +1,12 @@
 import "./CountryBlockerPreview.css";
+import type { CountryBlockerSettingsData } from "../types/widgetTypes";
 
-export default function CountryBlockerPreview({ settings }: { settings: any }) {
-  const isEnabled = settings?.enabled;
+type Props = {
+  settings: CountryBlockerSettingsData;
+};
+
+export default function CountryBlockerPreview({ settings }: Props) {
+  const isEnabled = settings.enabled;
 
   return (
     <div className={`srt-country-preview-wrapper ${isEnabled ? "enabled" : "disabled"}`}>
@@ -9,7 +14,7 @@ export default function CountryBlockerPreview({ settings }: { settings: any }) {
         <div className="srt-country-preview-card">
           <h2>Access Restricted</h2>
           <p>
-            {settings?.message || "Sorry, your country is restricted."}
+            {settings.message || "Sorry, your country is restricted."}
           </p>
           <button>Close</button>
         </div>

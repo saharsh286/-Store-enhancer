@@ -1,6 +1,6 @@
 import {
   ActionFunctionArgs,
-  Form,
+  
   type LoaderFunctionArgs,
 } from "react-router";
 import { authenticate } from "../shopify.server";
@@ -34,7 +34,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     try {
       const parsed = JSON.parse(metafield.value);
-      return parsed?.enabled === true || parsed?.enabled === "true";
+      return Boolean(parsed?.enabled);
     } catch {
       return false;
     }

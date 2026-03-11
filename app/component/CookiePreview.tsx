@@ -1,6 +1,11 @@
 import "./CookiePreview.css";
+import type { CookieBoxSettingsProps } from "../types/widgetTypes";
 
-export default function CookiePreview({ settings }: { settings: any }) {
+type Props = {
+  settings: CookieBoxSettingsProps;
+};
+
+export default function CookiePreview({ settings }: Props) {
   const positionClass =
     settings.position === "top"
       ? "cookie-top"
