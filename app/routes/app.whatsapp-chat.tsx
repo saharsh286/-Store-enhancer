@@ -47,7 +47,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     defaultMessage: String(formData.get("defaultMessage") || ""),
   };
 
-  console.log("FORM DATA:", parsedData);
 
   const dbRecords = {
     ...parsedData,

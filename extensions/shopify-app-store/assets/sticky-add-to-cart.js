@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const container = document.getElementById("sticky-add-to-cart-settings");
 
   if (!container) {
-    console.log("Sticky container not found");
+   
     return;
   }
   
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelector('form[data-type="add-to-cart-form"]');
 
   if (!productForm) {
-    console.log("Product form not found");
+ 
     return;
   }
 

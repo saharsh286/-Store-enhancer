@@ -1,79 +1,82 @@
 (function () {
 
-  if (window.__SRT_BACK_TO_TOP_INITIALIZED__) return;
-  window.__SRT_BACK_TO_TOP_INITIALIZED__ = true;
+  function initBackToTop() {
 
-  document.addEventListener("DOMContentLoaded", function () {
-
-    document.querySelectorAll(
-      ".srt-back-to-top"
-    ).forEach(el => el.remove());
+    // Remove existing buttons (avoid duplicates)
+    document.querySelectorAll(".srt-back-to-top").forEach(el => el.remove());
 
     const settingsElement = document.getElementById("back-to-top-settings");
     if (!settingsElement) return;
 
-    const settings = JSON.parse(settingsElement.dataset.settings || "{}");
-    console.log("SETTINGS:", settings);
+    let settings = {};
 
-    if (!settings.enabled) return;
-
-    // 🔹 VISIBILITY VALUE
-    const visibility = (settings.visibility || "")
-      .toString()
-      .toLowerCase()
-      .trim();
-
-    console.log("VISIBILITY:", visibility);
-
-    // 🔴 If hidden → stop everything
-    if (visibility.includes("hidden")) {
+    try {
+      settings = JSON.parse(settingsElement.dataset.settings || "{}");
+    } catch (error) {
+      console.error("Back To Top settings parse error:", error);
       return;
     }
 
-    // 🔹 Create button
+    if (!settings.enabled) return;
+
+    const visibility = (settings.visibility || "optional").toLowerCase();
+    if (visibility === "hidden") return;
+
+    // Create button
     const button = document.createElement("div");
     button.className = "srt-back-to-top";
     button.innerHTML = "↑";
 
-    // 🔹 Position
-    const pos = (settings.position || "")
-      .toString()
-      .toLowerCase()
-      .trim();
-
-    if (pos.includes("left")) {
+    // Position
+    const position = (settings.position || "bottom-right").toLowerCase();
+    if (position.includes("left")) {
       button.classList.add("left");
     } else {
       button.classList.add("right");
     }
 
-    // 🔹 Color
+    // Color
     button.style.background = settings.color || "#000";
     button.style.color = "#fff";
 
     document.body.appendChild(button);
 
-    // 🟢 REQUIRED → always visible
-    if (visibility.includes("required")) {
-      button.classList.add("show");
-    }
+    // Scroll visibility handler
+    function handleVisibility() {
+      if (visibility === "required") {
+        button.classList.add("show");
+        return;
+      }
 
-    // 🟡 OPTIONAL → show on scroll
-    if (visibility.includes("optional")) {
-      window.addEventListener("scroll", function () {
+      if (visibility === "optional") {
         if (window.scrollY > 200) {
           button.classList.add("show");
         } else {
           button.classList.remove("show");
         }
-      });
+      }
     }
 
-    // 🔹 Click scroll
+    // Run once initially
+    handleVisibility();
+
+    // Listen to scroll
+    window.addEventListener("scroll", handleVisibility);
+
+    // Click behavior
     button.addEventListener("click", function () {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
     });
 
-  });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initBackToTop);
+  } else {
+    initBackToTop();
+  }
 
 })();

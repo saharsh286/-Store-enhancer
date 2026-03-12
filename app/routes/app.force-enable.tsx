@@ -1,10 +1,17 @@
 import { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
 
+type ShopQueryResponse = {
+  data: {
+    shop: {
+      id: string;
+    };
+  };
+};
+
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
 
-  console.log("🚀 Force enabling all widgets...");
 
   // Get shop ID
   const shopRes = await admin.graphql(`
@@ -13,7 +20,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
   `);
 
-  const shopJson: any = await shopRes.json();
+  const shopJson = (await shopRes.json()) as ShopQueryResponse;
   const shopId = shopJson.data.shop.id;
 
   await admin.graphql(
@@ -60,10 +67,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           },
         ],
       },
-    }
+    },
   );
 
-  console.log("✅ All widgets force enabled.");
 
   return new Response("All widgets enabled successfully.");
 };

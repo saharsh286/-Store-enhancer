@@ -1,8 +1,4 @@
-import {
-  ActionFunctionArgs,
-  
-  type LoaderFunctionArgs,
-} from "react-router";
+import { ActionFunctionArgs, type LoaderFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
 import { useState } from "react";
 
@@ -16,6 +12,16 @@ import {
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
 
+  type MetafieldResponse = {
+    data?: {
+      shop?: {
+        metafield?: {
+          value?: string;
+        } | null;
+      };
+    };
+  };
+
   async function getStatus(namespace: string) {
     const res = await admin.graphql(`
       query {
@@ -27,7 +33,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     `);
 
-    const data: any = await res.json();
+    const data: MetafieldResponse = await res.json();
     const metafield = data?.data?.shop?.metafield;
 
     if (!metafield?.value) return false;
@@ -93,7 +99,6 @@ export default function Dashboard() {
       </s-section>
 
       <s-section heading="Widgets">
-
         <s-stack direction="inline" gap="base" alignItems="center">
           <s-button
             variant={filter === "all" ? "primary" : "tertiary"}
@@ -127,7 +132,6 @@ export default function Dashboard() {
           </s-table-header-row>
 
           <s-table-body>
-
             {/* WhatsApp Chat */}
             {showRow(whatsappEnabled) && (
               <s-table-row>
@@ -162,7 +166,9 @@ export default function Dashboard() {
                   Restrict or redirect visitors by country.
                 </s-table-cell>
                 <s-table-cell>
-                  <s-badge tone={countryBlockerEnabled ? "success" : "critical"}>
+                  <s-badge
+                    tone={countryBlockerEnabled ? "success" : "critical"}
+                  >
                     {countryBlockerEnabled ? "Active" : "Inactive"}
                   </s-badge>
                 </s-table-cell>
@@ -242,7 +248,6 @@ export default function Dashboard() {
                 </s-table-cell>
               </s-table-row>
             )}
-
           </s-table-body>
         </s-table>
       </s-section>

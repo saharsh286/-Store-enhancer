@@ -1,139 +1,148 @@
-document.addEventListener("DOMContentLoaded", function () {
-  if (window.__SRT_COOKIE_INITIALIZED__) return;
-  window.__SRT_COOKIE_INITIALIZED__ = true;
+(function () {
 
-  console.log("🍪 COOKIE JS STARTED");
+  function initCookieConsent() {
 
-  const settingsElement = document.getElementById("cookie-consent-settings");
+    const settingsElement = document.getElementById("cookie-consent-settings");
+    if (!settingsElement) return;
 
-  if (!settingsElement) {
-    console.log("Settings element not found");
-    return;
-  }
+    let settings = {};
 
-  const settings = JSON.parse(settingsElement.dataset.settings || "{}");
-
-  if (!settings.enabled) {
-    console.log("Banner disabled");
-    return;
-  }
-  // ✅ CHECK IF USER ALREADY GAVE CONSENT
-  const existingChoice = localStorage.getItem("srt_cookie_choice");
-
-  if (
-    existingChoice === "accepted" ||
-    existingChoice === "rejected" ||
-    existingChoice === "customized"
-  ) {
-    console.log("Consent already given:", existingChoice);
-    return; // 🚀 STOP banner from showing again
-  }
-
-  /* Dynamic Style Injection */
-  const style = document.createElement("style");
-  style.innerHTML = `
-    .srt-cookie-banner {
-      background: ${settings.color};
+    try {
+      settings = JSON.parse(settingsElement.dataset.settings || "{}");
+    } catch (error) {
+      console.error("Cookie settings parse error", error);
+      return;
     }
-  `;
-  document.head.appendChild(style);
 
-  /* Create Banner */
-  const banner = document.createElement("div");
-  banner.className = `srt-cookie-banner ${settings.position === "top" ? "top" : "bottom"}`;
-  // color change //
-  banner.style.background = settings.color || "#111";
+    if (!settings.enabled) return;
 
-  banner.innerHTML = `
-    <div class="srt-cookie-container">
-      <div class="srt-cookie-text">
-        ${settings.message}
+    /* CHECK IF USER ALREADY CHOSE */
+    const existingChoice = localStorage.getItem("srt_cookie_choice");
+
+    if (
+      existingChoice === "accepted" ||
+      existingChoice === "rejected" ||
+      existingChoice === "customized"
+    ) {
+      return;
+    }
+
+    /* STYLE */
+    const style = document.createElement("style");
+    style.innerHTML = `
+      .srt-cookie-banner {
+        background: ${settings.color || "#111"};
+      }
+    `;
+    document.head.appendChild(style);
+
+    /* BANNER */
+    const banner = document.createElement("div");
+    banner.className = `srt-cookie-banner ${
+      settings.position === "top" ? "top" : "bottom"
+    }`;
+
+    banner.innerHTML = `
+      <div class="srt-cookie-container">
+        <div class="srt-cookie-text">
+          ${settings.message || ""}
+        </div>
+
+        <div class="srt-cookie-actions">
+          <button class="srt-cookie-accept">
+            ${settings.acceptText || "Accept"}
+          </button>
+
+          <button class="srt-cookie-reject">
+            ${settings.rejectText || "Reject"}
+          </button>
+
+          <button class="srt-cookie-customize">
+            Customize
+          </button>
+        </div>
       </div>
+    `;
 
-      <div class="srt-cookie-actions">
-        <button class="srt-cookie-accept">
-          ${settings.acceptText}
-        </button>
+    document.body.appendChild(banner);
 
-        <button class="srt-cookie-reject">
-          ${settings.rejectText}
-        </button>
+    /* ACCEPT */
+    banner.querySelector(".srt-cookie-accept").addEventListener("click", () => {
+      localStorage.setItem("srt_cookie_choice", "accepted");
+      banner.remove();
+    });
 
-        <button class="srt-cookie-customize">
-          Customize
-        </button>
-      </div>
-    </div>
-  `;
+    /* REJECT */
+    banner.querySelector(".srt-cookie-reject").addEventListener("click", () => {
+      localStorage.setItem("srt_cookie_choice", "rejected");
+      banner.remove();
+    });
 
-  document.body.appendChild(banner);
+    /* CUSTOMIZE */
+    banner.querySelector(".srt-cookie-customize").addEventListener("click", () => {
 
-  banner.querySelector(".srt-cookie-accept").addEventListener("click", () => {
-    localStorage.setItem("srt_cookie_choice", "accepted");
-    banner.remove();
-  });
-
-  banner.querySelector(".srt-cookie-reject").addEventListener("click", () => {
-    localStorage.setItem("srt_cookie_choice", "rejected");
-    banner.remove();
-  });
-  banner
-    .querySelector(".srt-cookie-customize")
-    .addEventListener("click", () => {
       const overlay = document.createElement("div");
       overlay.className = "srt-cookie-overlay";
 
       overlay.innerHTML = `
-      <div class="srt-cookie-modal">
-        <h3>Cookie Preferences</h3>
-  
-        <div class="srt-cookie-option">
-          <span>Necessary Cookies</span>
-          <input type="checkbox" checked disabled />
+        <div class="srt-cookie-modal">
+          <h3>Cookie Preferences</h3>
+
+          <div class="srt-cookie-option">
+            <span>Necessary Cookies</span>
+            <input type="checkbox" checked disabled />
+          </div>
+
+          <div class="srt-cookie-option">
+            <span>Analytics Cookies</span>
+            <input type="checkbox" id="analytics-toggle" />
+          </div>
+
+          <div class="srt-cookie-option">
+            <span>Marketing Cookies</span>
+            <input type="checkbox" id="marketing-toggle" />
+          </div>
+
+          <button class="srt-cookie-save">Save Preferences</button>
         </div>
-  
-        <div class="srt-cookie-option">
-          <span>Analytics Cookies</span>
-          <input type="checkbox" id="analytics-toggle" />
-        </div>
-  
-        <div class="srt-cookie-option">
-          <span>Marketing Cookies</span>
-          <input type="checkbox" id="marketing-toggle" />
-        </div>
-  
-        <button class="srt-cookie-save">Save Preferences</button>
-      </div>
-    `;
+      `;
 
       document.body.appendChild(overlay);
 
-      overlay
-        .querySelector(".srt-cookie-save")
-        .addEventListener("click", () => {
-          const analytics = overlay.querySelector("#analytics-toggle").checked;
-          const marketing = overlay.querySelector("#marketing-toggle").checked;
+      overlay.querySelector(".srt-cookie-save").addEventListener("click", () => {
 
-          const preferences = {
-            necessary: true,
-            analytics,
-            marketing,
-          };
+        const analytics = overlay.querySelector("#analytics-toggle").checked;
+        const marketing = overlay.querySelector("#marketing-toggle").checked;
 
-          localStorage.setItem(
-            "srt_cookie_preferences",
-            JSON.stringify(preferences),
-          );
-          localStorage.setItem("srt_cookie_choice", "customized");
+        const preferences = {
+          necessary: true,
+          analytics,
+          marketing,
+        };
 
-          overlay.remove();
-          banner.remove();
-        });
+        localStorage.setItem(
+          "srt_cookie_preferences",
+          JSON.stringify(preferences)
+        );
+
+        localStorage.setItem("srt_cookie_choice", "customized");
+
+        overlay.remove();
+        banner.remove();
+      });
 
       overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) {
-          overlay.remove();
-        }
+        if (e.target === overlay) overlay.remove();
       });
+
     });
-});
+
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCookieConsent);
+  } else {
+    initCookieConsent();
+  }
+
+})();

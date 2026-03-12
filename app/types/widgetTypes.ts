@@ -7,26 +7,26 @@ import type {
   } from "@prisma/client";
   
   export type BackToTopSettingsData = Omit<
-    BackToTopSettings,
-    "id" | "createdAt" | "updatedAt"
-  >;
+  BackToTopSettings,
+  "id" | "createdAt" | "updatedAt" | "shop"
+>;
   
   export type WhatsappChatSettingsData = Omit<
     WhatsAppChatSettings,
-    "id" | "createdAt" | "updatedAt"
+    "id"  | "shop" | "createdAt" | "updatedAt"
   >;
   
   export type StickyAddToCartSettingsData = Omit<
     StickyAddToCartSettings,
-    "id" | "createdAt" | "updatedAt"
+    "id"  | "shop" | "createdAt" | "updatedAt"
   >;
   
   export type CookieBoxSettingsProps = Omit<
-    CookieConsentSettings,
-    "id" | "createdAt" | "updatedAt"
-  >;
+  CookieConsentSettings,
+  "id" | "shop" | "createdAt" | "updatedAt"
+>;
   
-  export type CountryBlockerSettingsData = Omit<
-    CountryBlockerSettings,
-    "id" | "createdAt" | "updatedAt"
-  >;
+export type CountryBlockerSettingsData = Omit<
+  CountryBlockerSettings,
+  "id" | "shop" | "createdAt" | "updatedAt"
+>;

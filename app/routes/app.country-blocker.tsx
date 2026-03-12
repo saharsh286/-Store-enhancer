@@ -109,6 +109,16 @@ export default function CountryBlockerPage() {
       app.toast.show("Country Blocker settings saved");
     }
   }, [actionData, app]);
+  const previewSettings = {
+    enabled,
+    message,
+    mode,
+    countryCodes: countryCodes
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean),
+    alignment,
+  };
 
   return (
     <s-page heading="Country Blocker">
@@ -205,15 +215,7 @@ export default function CountryBlockerPage() {
 
             <s-grid-item gridColumn="span 4">
               <s-section heading="Preview">
-                <CountryBlockerPreview
-                  settings={{
-                    enabled,
-                    message,
-                    mode,
-                    countryCodes,
-                    alignment,
-                  }}
-                />
+                <CountryBlockerPreview settings={previewSettings} />
               </s-section>
             </s-grid-item>
           </s-grid>

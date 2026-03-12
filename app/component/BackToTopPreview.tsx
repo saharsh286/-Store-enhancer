@@ -1,14 +1,13 @@
 import "./BackToTopPreview.css";
 import type { BackToTopSettingsData } from "../types/widgetTypes";
+
 export default function BackToTopPreview({
   settings,
 }: {
   settings: BackToTopSettingsData;
 }) {
   const positionClass =
-    settings.position === "bottom-left"
-      ? "btt-left"
-      : "btt-right";
+    settings.position === "bottom-left" ? "btt-left" : "btt-right";
 
   return (
     <div
@@ -16,21 +15,22 @@ export default function BackToTopPreview({
         settings?.enabled ? "" : "btt-disabled"
       }`}
     >
+      {/* Fake page content */}
       <div className="btt-fake-content">
         <p>Store page preview...</p>
         <p>Store page preview...</p>
         <p>Store page preview...</p>
       </div>
 
+      {/* Disabled overlay */}
       {!settings?.enabled && (
-        <div className="btt-disabled-overlay">
-          Preview (Disabled)
-        </div>
+        <div className="btt-disabled-overlay">Preview (Disabled)</div>
       )}
 
+      {/* Back to top button */}
       <div
         className={`btt-button ${positionClass}`}
-        style={{ backgroundColor: settings.color || "#000" }}
+        style={{ backgroundColor: settings.color || "#000000" }}
       >
         ↑
       </div>

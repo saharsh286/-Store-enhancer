@@ -1,26 +1,20 @@
-  {% assign settings = shop.metafields.back_to_top.settings.value %}
-  <script>
-    console.log("back to top data Metafield Raw:", {{ settings | json }});
-  </script>
+{% assign settings = shop.metafields.back_to_top.settings.value %}
 
-
-
-  {% if settings %}
-    <div 
-      id="back-to-top-settings"
-      data-settings='{{ settings | json }}'
-      style="display:none;">
-    </div>
-  {% endif %}
+{% if settings %}
+  <div
+    id="back-to-top-settings"
+    data-settings='{{ settings | json | escape }}'
+    style="display:none;"
+  ></div>
 
   {{ 'back-to-top.css' | asset_url | stylesheet_tag }}
   <script src="{{ 'back-to-top.js' | asset_url }}" defer></script>
+{% endif %}
 
-  {% schema %}
-  {
-    "name": "Back To Top",
-    "target": "section",
-    "settings": []
-  }
-
-  {% endschema %}
+{% schema %}
+{
+  "name": "Back To Top",
+  "target": "section",
+  "settings": []
+}
+{% endschema %}

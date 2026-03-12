@@ -1,25 +1,46 @@
-console.log("🚀 Store Enhancer Loader started");
-
 (function () {
-  const backToTop = window.__BACK_TO_TOP_SETTINGS__;
-  const cookie = window.__COOKIE_CONSENT_SETTINGS__;
-
-  console.log("📦 Loader got BackToTop:", backToTop);
-  console.log("📦 Loader got Cookie:", cookie);
 
   function loadScript(file) {
     const script = document.createElement("script");
     script.src = `/cdn/shop/t/0/assets/${file}`;
     script.defer = true;
     document.head.appendChild(script);
-    console.log("✅ Loaded:", file);
   }
 
-  if (backToTop && backToTop.enabled) {
-    loadScript("back-to-top.js");
-  }
+  document.addEventListener("DOMContentLoaded", function () {
 
-  if (cookie && cookie.enabled) {
-    loadScript("cookie-consent.js");
-  }
+    /* BACK TO TOP */
+
+    const backToTopElement = document.getElementById("back-to-top-settings");
+
+    if (backToTopElement) {
+      try {
+        const settings = JSON.parse(backToTopElement.dataset.settings || "{}");
+
+        if (settings.enabled) {
+          loadScript("back-to-top.js");
+        }
+      } catch (e) {
+        console.error("Back To Top settings error", e);
+      }
+    }
+
+    /* COOKIE CONSENT */
+
+    const cookieElement = document.getElementById("cookie-consent-settings");
+
+    if (cookieElement) {
+      try {
+        const settings = JSON.parse(cookieElement.dataset.settings || "{}");
+
+        if (settings.enabled) {
+          loadScript("cookie-consent.js");
+        }
+      } catch (e) {
+        console.error("Cookie settings error", e);
+      }
+    }
+
+  });
+
 })();

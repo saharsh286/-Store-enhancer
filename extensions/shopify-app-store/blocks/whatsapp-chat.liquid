@@ -1,13 +1,9 @@
 {% assign settings = shop.metafields.whatsapp_chat.settings.value %}
 
-<script>
-  console.log("WhatsApp Chat Metafield:", {{ settings | json }});
-</script>
-
 {% if settings %}
   <div
     id="whatsapp-chat-settings"
-    data-settings='{{ settings | json }}'
+    data-settings='{{ settings | json | escape }}'
     style="display:none;">
   </div>
 

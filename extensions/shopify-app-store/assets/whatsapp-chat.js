@@ -1,18 +1,13 @@
 (function () {
-
   function initWhatsAppWidget() {
-
-    console.log("WhatsApp Widget Loaded");
-
+  
     const container = document.getElementById("whatsapp-chat-settings");
     if (!container) {
-      console.log("WhatsApp settings container not found");
       return;
     }
 
     const raw = container.dataset.settings;
     if (!raw) {
-      console.log("WhatsApp settings empty");
       return;
     }
 
@@ -24,8 +19,6 @@
       console.error("Settings parse error", e);
       return;
     }
-
-    console.log("Widget Settings:", settings);
 
     if (!settings.enabled) return;
 
@@ -56,7 +49,6 @@
     /* PREVENT DUPLICATE WIDGET */
 
     if (document.querySelector(".wa-widget")) {
-      console.log("Widget already exists");
       return;
     }
 
@@ -157,14 +149,13 @@
 
     function isMobile() {
       return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-        navigator.userAgent
+        navigator.userAgent,
       );
     }
 
     /* SEND MESSAGE */
 
     send.onclick = () => {
-
       const text = encodeURIComponent(input.value || defaultMessage);
 
       let url;
@@ -176,9 +167,7 @@
       }
 
       window.open(url, "_blank");
-
     };
-
   }
 
   /* WAIT FOR DOM */
@@ -188,5 +177,4 @@
   } else {
     initWhatsAppWidget();
   }
-
 })();
